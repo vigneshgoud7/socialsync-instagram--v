@@ -60,7 +60,7 @@ const PostCard = {
                 <button class="action-btn ${isLiked ? 'liked' : ''}" onclick="PostCard.toggleLike('${post._id}', this)">
                     <i class="fa${isLiked ? 's' : 'r'} fa-heart"></i>
                 </button>
-                <button class="action-btn" onclick="PostCard.focusComment('${post._id}')">
+                <button class="action-btn" onclick="CommentModal.open('${post._id}')">
                     <i class="far fa-comment"></i>
                 </button>
                 <button class="action-btn" onclick="ShareModal.open('${post._id}')">

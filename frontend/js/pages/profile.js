@@ -172,7 +172,7 @@ const ProfilePage = {
                     content.innerHTML = `<div class="profile-grid"></div>`;
                     const grid = content.querySelector('.profile-grid');
                     grid.innerHTML = response.posts.map(post => `
-                        <div class="profile-grid-item" onclick="alert('Post detail - ID: ${post._id}')">
+                        <div class="profile-grid-item" onclick="PostDetailModal.open('${post._id}')">
                             <img src="${escapeHtml(post.images[0].url)}" 
                                  alt="Post"
                                  onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/d1/Image_not_available.png'">
@@ -202,7 +202,7 @@ const ProfilePage = {
                     content.innerHTML = `<div class="profile-grid"></div>`;
                     const grid = content.querySelector('.profile-grid');
                     grid.innerHTML = response.posts.map(post => `
-                        <div class="profile-grid-item" onclick="alert('Post detail - ID: ${post._id}')">
+                        <div class="profile-grid-item" onclick="PostDetailModal.open('${post._id}')">
                             <img src="${escapeHtml(post.images[0].url)}" 
                                  alt="Post"
                                  onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/d1/Image_not_available.png'">

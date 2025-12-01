@@ -34,7 +34,7 @@ const ExplorePage = {
                 `;
             } else {
                 grid.innerHTML = response.posts.map(post => `
-                    <div class="profile-grid-item" onclick="alert('Post detail view - Post ID: ${post._id}')">
+                    <div class="profile-grid-item" onclick="PostDetailModal.open('${post._id}')">
                         <img src="${escapeHtml(post.images[0].url)}" 
                              alt="Post" 
                              onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/d/d1/Image_not_available.png'">

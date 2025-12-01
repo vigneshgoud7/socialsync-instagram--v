@@ -33,7 +33,8 @@ router.get('/search', protect, async (req, res) => {
 router.get('/:username', protect, async (req, res) => {
     try {
         const user = await User.findOne({ username: req.params.username })
-            .populate('followers following', 'username fullName profilePicture');
+            .populate('followers following', 'username fullName profilePicture')
+            .populate('posts');
 
         if (!user) {
             return res.status(404).json({ success: false, message: 'User not found' });
