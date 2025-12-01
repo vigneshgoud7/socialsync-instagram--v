@@ -56,6 +56,21 @@ const UploadPage = {
                                     placeholder="Add location">
                             </div>
 
+                            <div class="form-group">
+                                <label class="form-label">Tag People (optional)</label>
+                                <div style="position: relative;">
+                                    <input 
+                                        type="text" 
+                                        id="tag-input" 
+                                        class="form-input" 
+                                        placeholder="Search for people to tag"
+                                        autocomplete="off"
+                                        oninput="UploadPage.searchUsers(event)">
+                                    <div id="tag-suggestions" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: var(--card-bg); border: 1px solid var(--border); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; z-index: 100; margin-top: 4px;"></div>
+                                </div>
+                                <div id="tagged-users" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;"></div>
+                            </div>
+
                             <div style="display: flex; gap: 12px; margin-top: 24px;">
                                 <button class="btn btn-secondary" onclick="UploadPage.reset()">
                                     Cancel
@@ -72,6 +87,8 @@ const UploadPage = {
 
         this.selectedFiles = [];
         this.previewUrls = [];
+        this.taggedUsers = [];
+        this.searchTimeout = null;
 
         // Setup caption counter
         const captionEl = document.getElementById('caption');
@@ -80,6 +97,14 @@ const UploadPage = {
                 document.getElementById('caption-count').textContent = e.target.value.length;
             });
         }
+
+        // Close suggestions when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#tag-input') && !e.target.closest('#tag-suggestions')) {
+                const suggestions = document.getElementById('tag-suggestions');
+                if (suggestions) suggestions.style.display = 'none';
+            }
+        });
     },
 
     handleDragOver(e) {
@@ -194,7 +219,8 @@ const UploadPage = {
             await api.createPost({
                 images: this.selectedFiles,
                 caption,
-                location
+                location,
+                taggedUsers: this.taggedUsers.map(u => u._id)
             });
 
             Toast.success('Post shared successfully!');
@@ -210,11 +236,97 @@ const UploadPage = {
     reset() {
         this.selectedFiles = [];
         this.previewUrls = [];
+        this.taggedUsers = [];
         document.getElementById('upload-area').style.display = 'block';
         document.getElementById('preview-area').style.display = 'none';
         document.getElementById('file-input').value = '';
         document.getElementById('caption').value = '';
         document.getElementById('location').value = '';
         document.getElementById('caption-count').textContent = '0';
+        document.getElementById('tag-input').value = '';
+        document.getElementById('tagged-users').innerHTML = '';
+        document.getElementById('tag-suggestions').style.display = 'none';
+    },
+
+    async searchUsers(event) {
+        const query = event.target.value.trim();
+        const suggestions = document.getElementById('tag-suggestions');
+
+        if (query.length < 2) {
+            suggestions.style.display = 'none';
+            return;
+        }
+
+        // Debounce search
+        clearTimeout(this.searchTimeout);
+        this.searchTimeout = setTimeout(async () => {
+            try {
+                const response = await api.searchUsers(query);
+                const users = response.users.filter(u => {
+                    // Exclude already tagged users
+                    return !this.taggedUsers.some(tagged => tagged._id === u._id);
+                });
+
+                if (users.length === 0) {
+                    suggestions.innerHTML = '<div style="padding: 12px; text-align: center; color: var(--text-secondary);">No users found</div>';
+                    suggestions.style.display = 'block';
+                    return;
+                }
+
+                suggestions.innerHTML = users.map(user => `
+                    <div class="user-suggestion" 
+                         style="display: flex; align-items: center; padding: 12px; cursor: pointer; transition: background 0.2s;"
+                         onmouseover="this.style.background='var(--background)'"
+                         onmouseout="this.style.background='transparent'"
+                         onclick="UploadPage.selectUser('${user._id}', '${escapeHtml(user.username)}', '${escapeHtml(user.fullName)}', '${escapeHtml(user.profilePicture?.url || '')}')">
+                        <img src="${escapeHtml(user.profilePicture?.url || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png')}" 
+                             style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-right: 12px;"
+                             onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'">
+                        <div>
+                            <div style="font-weight: 600;">${escapeHtml(user.username)}</div>
+                            <div style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(user.fullName)}</div>
+                        </div>
+                    </div>
+                `).join('');
+                suggestions.style.display = 'block';
+            } catch (error) {
+                console.error('Search error:', error);
+            }
+        }, 300);
+    },
+
+    selectUser(id, username, fullName, profileUrl) {
+        // Add to tagged users
+        this.taggedUsers.push({ _id: id, username, fullName, profilePicture: { url: profileUrl } });
+
+        // Update UI
+        this.renderTaggedUsers();
+
+        // Clear input and suggestions
+        document.getElementById('tag-input').value = '';
+        document.getElementById('tag-suggestions').style.display = 'none';
+    },
+
+    removeTaggedUser(id) {
+        this.taggedUsers = this.taggedUsers.filter(u => u._id !== id);
+        this.renderTaggedUsers();
+    },
+
+    renderTaggedUsers() {
+        const container = document.getElementById('tagged-users');
+        if (this.taggedUsers.length === 0) {
+            container.innerHTML = '';
+            return;
+        }
+
+        container.innerHTML = this.taggedUsers.map(user => `
+            <div style="display: inline-flex; align-items: center; gap: 6px; background: var(--background); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 6px 10px;">
+                <span style="font-size: 14px;">@${escapeHtml(user.username)}</span>
+                <button onclick="UploadPage.removeTaggedUser('${user._id}')" 
+                        style="background: none; border: none; color: var(--text-secondary); cursor: pointer; padding: 0; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center;">
+                    <i class="fas fa-times" style="font-size: 12px;"></i>
+                </button>
+            </div>
+        `).join('');
     }
 };

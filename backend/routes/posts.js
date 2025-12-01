@@ -45,9 +45,13 @@ router.get('/feed', protect, async (req, res) => {
 
         // Use req.user from protect middleware
         const following = req.user.following || [];
+        const blockedUsers = req.user.blockedUsers || [];
 
         const posts = await Post.find({
-            user: { $in: [...following, req.user.id] }
+            user: {
+                $in: [...following, req.user.id],
+                $nin: blockedUsers // Exclude blocked users
+            }
         })
             .sort('-createdAt')
             .skip(skip)
@@ -84,7 +88,8 @@ router.get('/user/:userId', protect, async (req, res) => {
     try {
         const posts = await Post.find({ user: req.params.userId })
             .sort('-createdAt')
-            .populate('user', 'username fullName profilePicture isVerified');
+            .populate('user', 'username fullName profilePicture isVerified')
+            .populate('taggedUsers', 'username fullName');
         res.json({ success: true, posts });
     } catch (error) {
         res.status(500).json({ success: false, message: 'Server error' });

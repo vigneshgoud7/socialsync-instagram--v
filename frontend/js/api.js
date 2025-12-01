@@ -103,12 +103,39 @@ class APIClient {
         });
     }
 
+    async updateProfilePicture(file) {
+        const formData = new FormData();
+        formData.append('image', file);
+
+        return await this.request('/users/profile-picture', {
+            method: 'PUT',
+            body: formData,
+            isFormData: true
+        });
+    }
+
     async followUser(userId) {
         return await this.request(`/users/${userId}/follow`, { method: 'POST' });
     }
 
     async unfollowUser(userId) {
         return await this.request(`/users/${userId}/follow`, { method: 'DELETE' });
+    }
+
+    async getFollowers(userId) {
+        return await this.request(`/users/${userId}/followers`);
+    }
+
+    async getFollowing(userId) {
+        return await this.request(`/users/${userId}/following`);
+    }
+
+    async blockUser(userId) {
+        return await this.request(`/users/${userId}/block`, { method: 'POST' });
+    }
+
+    async unblockUser(userId) {
+        return await this.request(`/users/${userId}/block`, { method: 'DELETE' });
     }
 
     // Posts
@@ -119,6 +146,9 @@ class APIClient {
         }
         if (postData.caption) formData.append('caption', postData.caption);
         if (postData.location) formData.append('location', postData.location);
+        if (postData.taggedUsers && postData.taggedUsers.length > 0) {
+            formData.append('taggedUsers', JSON.stringify(postData.taggedUsers));
+        }
 
         return await this.request('/posts', {
             method: 'POST',

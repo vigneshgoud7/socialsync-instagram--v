@@ -357,7 +357,322 @@
     cursor: pointer;
 }
 
-/* Modal */
+/* Modal Overlay */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: var(--overlay);
+    z-index: var(--z-modal-backdrop);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-md);
+}
+
+.modal-content {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    max-width: 500px;
+    width: 100%;
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 4px;
+}
+
+/* Comment Modal */
+.comment-modal-content {
+    max-width: 600px;
+}
+
+.comment-modal-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.comment-modal-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.comment-modal-post-preview {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: var(--spacing-md);
+    background: var(--background);
+}
+
+.comment-modal-post-preview img {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.post-preview-info {
+    flex: 1;
+}
+
+.post-preview-info .post-author {
+    margin-bottom: var(--spacing-xs);
+}
+
+.post-preview-info .post-author img {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+}
+
+.post-preview-info .post-caption {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.comment-modal-list {
+    flex: 1;
+    overflow-y: auto;
+    max-height: 400px;
+    padding: var(--spacing-md);
+}
+
+.no-comments {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-2xl);
+    text-align: center;
+}
+
+.comment-item {
+    display: flex;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+    position: relative;
+}
+
+.comment-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.comment-content {
+    flex: 1;
+}
+
+.comment-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: 4px;
+}
+
+.comment-header strong {
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+}
+
+.comment-time {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+}
+
+.comment-text {
+    font-size: var(--font-size-sm);
+    margin: 0;
+    word-wrap: break-word;
+}
+
+.comment-delete-btn {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px 8px;
+    font-size: 14px;
+    transition: color var(--transition-fast);
+}
+
+.comment-delete-btn:hover {
+    color: var(--error);
+}
+
+.comment-modal-input {
+    border-top: 1px solid var(--border);
+    padding: var(--spacing-md);
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.comment-modal-input input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-sm);
+}
+
+.comment-modal-input button {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: var(--radius-md);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.comment-modal-input button:hover {
+    background: var(--primary-dark);
+}
+
+/* ShareModal */
+.share-modal-content {
+    max-width: 420px;
+}
+
+.share-modal-header {
+    padding: var(--spacing-md);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.share-modal-header h3 {
+    margin: 0;
+    font-size: var(--font-size-lg);
+}
+
+.share-modal-body {
+    padding: var(--spacing-lg);
+}
+
+.share-post-preview {
+    display: flex;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md);
+    background: var(--background);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-lg);
+}
+
+.share-post-preview img {
+    width: 60px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+}
+
+.share-post-info {
+    flex: 1;
+}
+
+.share-post-info strong {
+    display: block;
+    font-size: var(--font-size-sm);
+    margin-bottom: 4px;
+}
+
+.share-post-info p {
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.share-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+}
+
+.share-option-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md);
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: var(--font-size-sm);
+}
+
+.share-option-btn:hover {
+    background: var(--surface);
+    border-color: var(--primary);
+}
+
+.share-option-btn.copied {
+    background: #e8f5e9;
+    border-color: #4caf50;
+}
+
+.share-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 20px;
+    color: white;
+}
+
+.share-icon i {
+    color: var(--text-primary);
+}
+
+.share-option-btn:hover .share-icon i {
+    color: var(--primary);
+}
+
+.share-icon.facebook i {
+    color: #1877f2;
+}
+
+.share-icon.twitter i {
+    color: #1da1f2;
+}
+
+.share-icon.whatsapp i {
+    color: #25d366;
+}
+
+.share-icon.linkedin i {
+    color: #0a66c2;
+}
+
+.share-icon.reddit i {
+    color: #ff4500;
+}
+
+/* Modal Backdrop */
 .modal-backdrop {
     position: fixed;
     top: 0;
@@ -497,5 +812,17 @@
         border-radius: 0;
         border-left: none;
         border-right: none;
+    }
+
+    .share-options {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .comment-modal-content,
+    .share-modal-content {
+        max-width: 100%;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
     }
 }

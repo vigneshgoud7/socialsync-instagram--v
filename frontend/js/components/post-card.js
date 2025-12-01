@@ -63,7 +63,7 @@ const PostCard = {
                 <button class="action-btn" onclick="PostCard.focusComment('${post._id}')">
                     <i class="far fa-comment"></i>
                 </button>
-                <button class="action-btn">
+                <button class="action-btn" onclick="ShareModal.open('${post._id}')">
                     <i class="far fa-paper-plane"></i>
                 </button>
                 <div class="post-actions-right">
@@ -77,6 +77,19 @@ const PostCard = {
                 <div class="post-likes" id="likes-${post._id}">
                     <strong>${formatNumber(post.likesCount || post.likes?.length || 0)} likes</strong>
                 </div>
+                ${post.taggedUsers && post.taggedUsers.length > 0 ? `
+                    <div style="margin-top: 4px; font-size: 14px;">
+                        <span style="color: var(--text-secondary);">with</span>
+                        ${post.taggedUsers.map((user, index) => `
+                            <a href="#/profile/${escapeHtml(user.username)}" 
+                               style="color: var(--text-primary); font-weight: 600; text-decoration: none;"
+                               onmouseover="this.style.textDecoration='underline'"
+                               onmouseout="this.style.textDecoration='none'">
+                                ${escapeHtml(user.username)}
+                            </a>${index < post.taggedUsers.length - 1 ? ', ' : ''}
+                        `).join('')}
+                    </div>
+                ` : ''}
                 ${post.caption ? `
                     <div class="post-caption">
                         <strong>${escapeHtml(post.user.username)}</strong>
@@ -85,7 +98,7 @@ const PostCard = {
                 ` : ''}
                 ${post.commentsCount > 0 ? `
                     <div class="post-comments-link" style="color: var(--text-secondary); cursor: pointer; font-size: 14px; margin-top: 4px;"
-                         onclick="PostCard.viewComments('${post._id}')">
+                         onclick="CommentModal.open('${post._id}')">
                         View all ${post.commentsCount} comments
                     </div>
                 ` : ''}
@@ -217,15 +230,39 @@ const PostCard = {
             if (input) {
                 input.value = '';
             }
+
+            // Fetch updated post to get new comment count
+            const response = await api.getPost(postId);
+            const post = response.post;
+
+            // Update comment count display
+            const card = document.querySelector(`[data-post-id="${postId}"]`);
+            if (card) {
+                const postInfo = card.querySelector('.post-info');
+                let commentsLink = postInfo.querySelector('.post-comments-link');
+
+                if (post.commentsCount > 0) {
+                    if (commentsLink) {
+                        commentsLink.textContent = `View all ${post.commentsCount} ${post.commentsCount === 1 ? 'comment' : 'comments'}`;
+                    } else {
+                        // Create the comments link if it doesn't exist
+                        const timestamp = postInfo.querySelector('.post-timestamp');
+                        if (timestamp) {
+                            commentsLink = document.createElement('div');
+                            commentsLink.className = 'post-comments-link';
+                            commentsLink.style.cssText = 'color: var(--text-secondary); cursor: pointer; font-size: 14px; margin-top: 4px;';
+                            commentsLink.textContent = `View all ${post.commentsCount} ${post.commentsCount === 1 ? 'comment' : 'comments'}`;
+                            commentsLink.onclick = () => CommentModal.open(postId);
+                            timestamp.parentNode.insertBefore(commentsLink, timestamp);
+                        }
+                    }
+                }
+            }
+
             Toast.success('Comment added');
         } catch (error) {
             Toast.error(error.message || 'Failed to add comment');
         }
-    },
-
-    viewComments(postId) {
-        // Navigate to post detail view (could implement later)
-        console.log('View comments for post:', postId);
     },
 
     async showOptions(postId, postUserId) {
