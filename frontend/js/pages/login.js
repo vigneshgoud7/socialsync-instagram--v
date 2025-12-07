@@ -52,6 +52,42 @@ const LoginPage = {
         `;
 
         this.setupFormHandlers();
+        this.setupRealtimeValidation();
+    },
+
+    setupRealtimeValidation() {
+        const emailOrUsernameInput = document.getElementById('emailOrUsername');
+
+        // Check if email/username exists
+        const validateEmailOrUsername = debounce(async (value) => {
+            if (!value || value.length < 3) {
+                return;
+            }
+
+            try {
+                // Determine if it's an email or username
+                const isEmail = isValidEmail(value);
+                const field = isEmail ? 'email' : 'username';
+
+                const response = await api.checkAvailability(field, value);
+
+                // For login, we want to show error if email/username is NOT registered
+                if (response.available) {
+                    this.showError('emailOrUsername', `This ${field} is not registered. Please sign up first.`);
+                } else {
+                    this.clearError('emailOrUsername');
+                }
+            } catch (error) {
+                console.error('Validation error:', error);
+            }
+        }, 600);
+
+        emailOrUsernameInput.addEventListener('input', (e) => {
+            const value = e.target.value.trim();
+            if (value.length >= 3) {
+                validateEmailOrUsername(value);
+            }
+        });
     },
 
     setupFormHandlers() {
@@ -82,6 +118,29 @@ const LoginPage = {
             }
 
             if (hasError) return;
+
+            // Check if email/username is registered
+            try {
+                loginBtn.disabled = true;
+                loginBtn.textContent = 'Checking...';
+
+                const isEmail = isValidEmail(emailOrUsername);
+                const field = isEmail ? 'email' : 'username';
+
+                const availabilityResponse = await api.checkAvailability(field, emailOrUsername);
+
+                if (availabilityResponse.available) {
+                    // Email/username is NOT registered
+                    this.showError('emailOrUsername', `This ${field} is not registered. Please sign up first.`);
+                    Toast.error(`This ${field} is not registered`);
+                    loginBtn.disabled = false;
+                    loginBtn.textContent = 'Log In';
+                    return;
+                }
+            } catch (error) {
+                console.error('Validation error:', error);
+                // Continue with login attempt even if validation fails
+            }
 
             // Submit
             try {
@@ -117,6 +176,18 @@ const LoginPage = {
         }
         if (inputEl) {
             inputEl.classList.add('error');
+        }
+    },
+
+    clearError(fieldId) {
+        const errorEl = document.getElementById(`${fieldId}-error`);
+        const inputEl = document.getElementById(fieldId);
+
+        if (errorEl) {
+            errorEl.textContent = '';
+        }
+        if (inputEl) {
+            inputEl.classList.remove('error');
         }
     }
 };

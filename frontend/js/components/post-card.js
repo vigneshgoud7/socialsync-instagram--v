@@ -196,18 +196,57 @@ const PostCard = {
             const isSaved = button.classList.contains('saved');
             const icon = button.querySelector('i');
 
+            // Optimistic UI update - change immediately for instant feedback
             if (isSaved) {
-                await api.unsavePost(postId);
                 button.classList.remove('saved');
                 icon.className = 'far fa-bookmark';
+            } else {
+                button.classList.add('saved');
+                icon.className = 'fas fa-bookmark';
+            }
+
+            // Update Auth.currentUser.savedPosts for state tracking
+            if (!Auth.currentUser.savedPosts) {
+                Auth.currentUser.savedPosts = [];
+            }
+
+            if (isSaved) {
+                // Remove from saved posts
+                Auth.currentUser.savedPosts = Auth.currentUser.savedPosts.filter(id => id !== postId);
+            } else {
+                // Add to saved posts
+                if (!Auth.currentUser.savedPosts.includes(postId)) {
+                    Auth.currentUser.savedPosts.push(postId);
+                }
+            }
+
+            // Make API call in background
+            if (isSaved) {
+                await api.unsavePost(postId);
                 Toast.success('Post removed from saved');
             } else {
                 await api.savePost(postId);
-                button.classList.add('saved');
-                icon.className = 'fas fa-bookmark';
                 Toast.success('Post saved');
             }
         } catch (error) {
+            // Revert UI change on error
+            const isSaved = button.classList.contains('saved');
+            const icon = button.querySelector('i');
+            if (isSaved) {
+                button.classList.remove('saved');
+                icon.className = 'far fa-bookmark';
+                // Also revert Auth.currentUser.savedPosts
+                if (Auth.currentUser.savedPosts) {
+                    Auth.currentUser.savedPosts = Auth.currentUser.savedPosts.filter(id => id !== postId);
+                }
+            } else {
+                button.classList.add('saved');
+                icon.className = 'fas fa-bookmark';
+                // Also revert Auth.currentUser.savedPosts
+                if (Auth.currentUser.savedPosts && !Auth.currentUser.savedPosts.includes(postId)) {
+                    Auth.currentUser.savedPosts.push(postId);
+                }
+            }
             Toast.error('Failed to save post');
         }
     },
@@ -266,28 +305,69 @@ const PostCard = {
     },
 
     async showOptions(postId, postUserId) {
-        const currentUser = await Auth.getCurrentUser();
-        const isOwnPost = currentUser._id === postUserId;
+        try {
+            console.log('showOptions called for post:', postId);
+            const currentUser = await Auth.getCurrentUser();
+            const isOwnPost = currentUser._id === postUserId;
+            console.log('Is own post:', isOwnPost);
 
-        const options = isOwnPost
-            ? ['Delete', 'Edit', 'Cancel']
-            : ['Report', 'Cancel'];
+            const options = isOwnPost
+                ? ['Delete', 'Edit', 'Cancel']
+                : ['Report', 'Cancel'];
 
-        Modal.showOptions(options, async (option) => {
-            if (option === 'Delete') {
-                Modal.confirm('Delete Post', 'Are you sure you want to delete this post?', async () => {
-                    try {
-                        await api.deletePost(postId);
-                        const card = document.querySelector(`[data-post-id="${postId}"]`);
-                        if (card) {
-                            card.remove();
+            Modal.showOptions(options, async (option) => {
+                console.log('Option selected:', option);
+
+                if (option === 'Delete') {
+                    Modal.confirm(
+                        'Delete Post',
+                        'Are you sure you want to delete this post? This action cannot be undone.',
+                        async () => {
+                            console.log('Delete confirmed - using optimistic deletion');
+
+                            // STEP 1: Update UI immediately (optimistic)
+                            const cards = document.querySelectorAll(`[data-post-id="${postId}"]`);
+                            console.log('Removing', cards.length, 'cards immediately');
+
+                            // Remove cards with fast animation
+                            cards.forEach((card, index) => {
+                                card.style.transition = 'all 0.15s ease-out';
+                                card.style.opacity = '0';
+                                card.style.transform = 'scale(0.95)';
+                                setTimeout(() => card.remove(), 150);
+                            });
+
+                            // Close modal immediately
+                            const modal = document.getElementById(`post-detail-modal-${postId}`);
+                            if (modal) {
+                                modal.remove();
+                                document.body.style.overflow = '';
+                            }
+
+                            // Show success toast immediately
+                            Toast.success('Post deleted');
+
+                            // STEP 2: Delete from backend in background (fire and forget)
+                            api.deletePost(postId)
+                                .then(() => console.log('✅ Backend deletion complete'))
+                                .catch(err => {
+                                    console.error('❌ Backend deletion failed:', err);
+                                    // Note: We don't restore the UI - post stays deleted from user's view
+                                });
+                        },
+                        () => {
+                            console.log('Delete cancelled');
                         }
-                        Toast.success('Post deleted');
-                    } catch (error) {
-                        Toast.error('Failed to delete post');
-                    }
-                });
-            }
-        });
+                    );
+                } else if (option === 'Edit') {
+                    Toast.info('Edit functionality coming soon!');
+                } else if (option === 'Report') {
+                    Toast.info('Report functionality coming soon!');
+                }
+            });
+        } catch (error) {
+            console.error('Error in showOptions:', error);
+            Toast.error('Failed to load options');
+        }
     }
 };

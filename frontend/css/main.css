@@ -70,6 +70,40 @@
     --z-toast: 1060;
 }
 
+/* Dark Mode Theme */
+[data-theme="dark"] {
+    --background: #000000;
+    --surface: #121212;
+    --surface-hover: #1a1a1a;
+    --surface-elevated: #1e1e1e;
+    --border: #262626;
+    --border-light: #2a2a2a;
+    --border-dark: #363636;
+
+    --text-primary: #ffffff;
+    --text-secondary: #b3b3b3;
+    --text-tertiary: #8e8e8e;
+    --text-inverse: #000000;
+    --text-link: #4db6ff;
+
+    --overlay: rgba(255, 255, 255, 0.1);
+    --overlay-light: rgba(255, 255, 255, 0.05);
+    --overlay-lighter: rgba(255, 255, 255, 0.02);
+
+    --hover-overlay: rgba(255, 255, 255, 0.08);
+    --active-overlay: rgba(255, 255, 255, 0.12);
+
+    --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4);
+    --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 8px rgba(0, 0, 0, 0.6), 0 2px 4px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 10px 20px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 20px 40px rgba(0, 0, 0, 0.8), 0 8px 16px rgba(0, 0, 0, 0.6);
+    --shadow-2xl: 0 30px 60px rgba(0, 0, 0, 0.9), 0 12px 24px rgba(0, 0, 0, 0.7);
+    --shadow-colored: 0 4px 12px rgba(77, 182, 255, 0.3);
+
+    --background-gradient: linear-gradient(180deg, #000000 0%, #0a0a0a 100%);
+}
+
 /* Reset & Base Styles */
 * {
     margin: 0;
@@ -90,6 +124,7 @@ body {
     color: var(--text-primary);
     background-color: var(--background);
     overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Typography */

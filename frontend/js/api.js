@@ -87,9 +87,19 @@ class APIClient {
         return await this.request('/auth/me');
     }
 
+    async checkAvailability(field, value) {
+        const queryParam = field === 'email' ? `email=${encodeURIComponent(value)}` : `username=${encodeURIComponent(value)}`;
+        return await this.request(`/auth/check-availability?${queryParam}`);
+    }
+
+
     // Users
     async searchUsers(query) {
         return await this.request(`/users/search?q=${encodeURIComponent(query)}`);
+    }
+
+    async getSuggestions() {
+        return await this.request('/users/suggestions');
     }
 
     async getUserProfile(username) {
@@ -137,6 +147,37 @@ class APIClient {
     async unblockUser(userId) {
         return await this.request(`/users/${userId}/block`, { method: 'DELETE' });
     }
+
+    async getMutualFollowers(userId) {
+        return await this.request(`/users/${userId}/mutual`);
+    }
+
+    async deleteAccount() {
+        const response = await this.request('/users/account', { method: 'DELETE' });
+        this.setToken(null);
+        return response;
+    }
+
+    async getFollowRequests() {
+        return await this.request('/users/follow-requests');
+    }
+
+    async acceptFollowRequest(userId) {
+        return await this.request(`/users/${userId}/accept-request`, { method: 'POST' });
+    }
+
+    async rejectFollowRequest(userId) {
+        return await this.request(`/users/${userId}/reject-request`, { method: 'DELETE' });
+    }
+
+    async getNotifications() {
+        return await this.request('/users/notifications/all');
+    }
+
+    async markNotificationsRead() {
+        return await this.request('/users/notifications/mark-read', { method: 'POST' });
+    }
+
 
     // Posts
     async createPost(postData) {
@@ -202,6 +243,44 @@ class APIClient {
 
     async getSavedPosts() {
         return await this.request('/posts/saved/all');
+    }
+
+    async archivePost(postId) {
+        return await this.request(`/posts/${postId}/archive`, { method: 'POST' });
+    }
+
+    async unarchivePost(postId) {
+        return await this.request(`/posts/${postId}/archive`, { method: 'DELETE' });
+    }
+
+    async getArchivedPosts() {
+        return await this.request('/posts/archived/all');
+    }
+
+    async sharePost(postId) {
+        return await this.request(`/posts/${postId}/share`, { method: 'POST' });
+    }
+
+    // Hashtags & Trending
+    async getHashtagPosts(tag) {
+        return await this.request(`/posts/hashtag/${tag}`);
+    }
+
+    async getTrendingHashtags(limit = 10) {
+        return await this.request(`/posts/trending/hashtags?limit=${limit}`);
+    }
+
+    // Analytics
+    async trackPostView(postId) {
+        return await this.request(`/analytics/${postId}/view`, { method: 'POST' });
+    }
+
+    async getPostAnalytics(postId) {
+        return await this.request(`/analytics/${postId}/analytics`);
+    }
+
+    async getProfileAnalytics() {
+        return await this.request('/users/analytics/profile');
     }
 }
 

@@ -6,8 +6,10 @@ const ShareModal = {
         modal.className = 'modal-overlay';
         modal.id = `share-modal-${post._id}`;
 
-        // Generate share URL (assuming the app is at localhost:5500 or similar)
-        const shareUrl = `${window.location.origin}${window.location.pathname}#/post/${post._id}`;
+        // Generate share URL
+        // For production, use your actual domain. For development, clean up the URL
+        const baseUrl = window.location.origin;
+        const shareUrl = `${baseUrl}/#/post/${post._id}`;
 
         modal.innerHTML = `
             <div class="modal-content share-modal-content" onclick="event.stopPropagation()">
@@ -86,6 +88,9 @@ const ShareModal = {
             // Fetch the post
             const response = await api.getPost(postId);
             const post = response.post;
+
+            // Track share count
+            await api.sharePost(postId);
 
             // Create and show modal
             const modal = this.render(post);

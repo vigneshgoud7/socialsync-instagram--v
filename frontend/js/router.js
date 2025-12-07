@@ -7,11 +7,21 @@ const Router = {
     init() {
         this.routes = {
             '/': () => this.authRequired(HomePage.render.bind(HomePage)),
-            '/login': () => LoginPage.render(),
-            '/signup': () => SignupPage.render(),
+            '/login': () => {
+                Navbar.hide();
+                LoginPage.render();
+            },
+            '/signup': () => {
+                Navbar.hide();
+                SignupPage.render();
+            },
             '/profile/:username': (params) => this.authRequired(() => ProfilePage.render(params.username)),
             '/upload': () => this.authRequired(UploadPage.render.bind(UploadPage)),
-            '/explore': () => this.authRequired(ExplorePage.render.bind(ExplorePage))
+            '/explore': () => this.authRequired(ExplorePage.render.bind(ExplorePage)),
+            '/notifications': () => this.authRequired(NotificationsPage.render.bind(NotificationsPage)),
+            '/settings': () => this.authRequired(SettingsPage.render.bind(SettingsPage)),
+            '/hashtag/:tag': (params) => this.authRequired(() => HashtagPage.render(params.tag)),
+            '/archived': () => this.authRequired(ArchivedPage.render.bind(ArchivedPage))
         };
 
         window.addEventListener('hashchange', () => this.handleRoute());

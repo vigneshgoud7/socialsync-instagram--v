@@ -28,6 +28,7 @@ const HomePage = {
         this.cleanupScroll = setupInfiniteScroll(() => this.loadMore());
     },
 
+
     async loadPosts() {
         if (this.isLoading || !this.hasMore) return;
 

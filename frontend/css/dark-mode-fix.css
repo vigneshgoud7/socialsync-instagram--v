@@ -1,0 +1,48 @@
+/* Fix input text colors for dark mode */
+input,
+textarea,
+select {
+    color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Ensure all form elements use theme colors */
+/* Fix input text colors for dark mode */
+input,
+textarea,
+select {
+    color: var(--text-primary) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: var(--text-secondary) !important;
+}
+
+/* Ensure all form elements use theme colors */
+.form-input,
+.form-textarea,
+.navbar-search input,
+.post-add-comment input,
+.comment-modal-input input {
+    color: var(--text-primary) !important;
+    background: transparent !important;
+}
+
+/* Specific fix for comment inputs */
+[data-theme="dark"] input {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] textarea {
+    color: #ffffff !important;
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: #8e8e8e !important;
+}

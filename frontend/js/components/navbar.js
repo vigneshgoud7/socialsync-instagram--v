@@ -28,9 +28,12 @@ const Navbar = {
                     <div class="nav-icon" onclick="window.location.hash = '#/upload'" title="Create">
                         <i class="far fa-plus-square"></i>
                     </div>
-                    <div class="nav-icon" id="notifications-icon" title="Notifications">
+                    <div class="nav-icon" id="notifications-icon" onclick="window.location.hash = '#/notifications'" title="Notifications">
                         <i class="far fa-heart"></i>
                         <span class="badge hidden" id="notifications-badge">0</span>
+                    </div>
+                    <div class="nav-icon" onclick="window.location.hash = '#/settings'" title="Settings">
+                        <i class="fas fa-cog"></i>
                     </div>
                     <img 
                         src="${escapeHtml(user.profilePicture.url)}" 
@@ -45,6 +48,29 @@ const Navbar = {
 
         navbar.style.display = 'flex';
         this.setupSearch();
+        this.updateNotificationBadge();
+    },
+
+    async updateNotificationBadge() {
+        try {
+            const response = await api.getNotifications();
+            const requestsCount = response.requests?.length || 0;
+            const unreadCount = response.unreadCount || 0;
+            const totalCount = requestsCount + unreadCount;
+
+            const badge = document.getElementById('notifications-badge');
+
+            if (badge) {
+                if (totalCount > 0) {
+                    badge.textContent = totalCount > 99 ? '99+' : totalCount;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
     },
 
     setupSearch() {
@@ -126,6 +152,71 @@ const Navbar = {
         const resultsContainer = document.getElementById('search-results');
         if (resultsContainer) {
             resultsContainer.remove();
+        }
+    },
+
+    async showFollowRequests() {
+        Modal.loading('Loading follow requests...');
+
+        try {
+            const response = await api.getFollowRequests();
+            const requests = response.requests || [];
+
+            if (requests.length === 0) {
+                Modal.show('Follow Requests', '<p class="text-secondary" style="text-align: center; padding: 20px;">No pending follow requests</p>', [{ text: 'Close' }]);
+                return;
+            }
+
+            const content = `
+                <div style="max-height: 400px; overflow-y: auto;">
+                    ${requests.map(user => `
+                        <div style="display: flex; align-items: center; padding: 12px; border-bottom: 1px solid var(--border);">
+                            <img src="${escapeHtml(user.profilePicture?.url || 'https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png')}" 
+                                 style="width: 44px; height: 44px; border-radius: 50%; object-fit: cover; margin-right: 12px;"
+                                 onerror="this.src='https://upload.wikimedia.org/wikipedia/commons/7/7c/Profile_avatar_placeholder_large.png'">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600;">
+                                    <a href="#/profile/${user.username}" onclick="Modal.close()" style="color: inherit; text-decoration: none;">
+                                        ${escapeHtml(user.username)}
+                                    </a>
+                                    ${user.isVerified ? '<i class="fas fa-check-circle" style="color: var(--primary); font-size: 12px;"></i>' : ''}
+                                </div>
+                                <div style="font-size: 12px; color: var(--text-secondary);">${escapeHtml(user.fullName)}</div>
+                            </div>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-primary btn-sm" onclick="Navbar.acceptRequest('${user._id}')">Accept</button>
+                                <button class="btn btn-secondary btn-sm" onclick="Navbar.rejectRequest('${user._id}')">Reject</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            Modal.show('Follow Requests', content, [{ text: 'Close' }]);
+        } catch (error) {
+            Modal.alert('Error', 'Failed to load follow requests');
+        }
+    },
+
+    async acceptRequest(userId) {
+        try {
+            await api.acceptFollowRequest(userId);
+            Toast.success('Follow request accepted');
+            this.showFollowRequests(); // Refresh the list
+            this.updateNotificationBadge();
+        } catch (error) {
+            Toast.error('Failed to accept request');
+        }
+    },
+
+    async rejectRequest(userId) {
+        try {
+            await api.rejectFollowRequest(userId);
+            Toast.success('Follow request rejected');
+            this.showFollowRequests(); // Refresh the list
+            this.updateNotificationBadge();
+        } catch (error) {
+            Toast.error('Failed to reject request');
         }
     },
 

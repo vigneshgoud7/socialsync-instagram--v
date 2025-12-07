@@ -4,6 +4,52 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const { protect, sendTokenResponse } = require('../middleware/auth');
 
+// @route   GET /api/auth/check-availability
+// @desc    Check if email or username is available
+// @access  Public
+router.get('/check-availability', async (req, res) => {
+    try {
+        const { email, username } = req.query;
+
+        if (!email && !username) {
+            return res.status(400).json({
+                success: false,
+                message: 'Please provide email or username to check'
+            });
+        }
+
+        const query = {};
+        if (email) query.email = email.toLowerCase();
+        if (username) query.username = username.toLowerCase();
+
+        const existingUser = await User.findOne({
+            $or: Object.entries(query).map(([key, value]) => ({ [key]: value }))
+        });
+
+        if (existingUser) {
+            const field = existingUser.email === email?.toLowerCase() ? 'email' : 'username';
+            return res.json({
+                success: true,
+                available: false,
+                field,
+                message: field === 'email' ? 'Email already registered' : 'Username already taken'
+            });
+        }
+
+        res.json({
+            success: true,
+            available: true,
+            message: 'Available'
+        });
+    } catch (error) {
+        console.error('Check availability error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Server error'
+        });
+    }
+});
+
 // @route   POST /api/auth/register
 // @desc    Register a new user
 // @access  Public

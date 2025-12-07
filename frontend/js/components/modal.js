@@ -75,6 +75,10 @@ const Modal = {
     },
 
     confirm(title, message, onConfirm, onCancel) {
+        const isDeletion = title.toLowerCase().includes('delete');
+        const confirmButtonText = isDeletion ? 'Delete' : 'Confirm';
+        const confirmButtonClass = isDeletion ? 'btn-danger' : 'btn-primary';
+
         this.show(title, `<p>${escapeHtml(message)}</p>`, [
             {
                 text: 'Cancel',
@@ -82,8 +86,8 @@ const Modal = {
                 onClick: onCancel
             },
             {
-                text: 'Confirm',
-                className: 'btn-primary',
+                text: confirmButtonText,
+                className: confirmButtonClass,
                 onClick: onConfirm
             }
         ]);
@@ -111,8 +115,19 @@ const Modal = {
 
         this.show('', content.replace(/border-bottom[^;]+;/, ''), []);
         this.onSelectCallback = (index) => {
-            onSelect(options[index]);
-            this.close();
+            const selectedOption = options[index];
+            // Only close immediately for Cancel option
+            // For other options, let the callback handle the modal
+            if (selectedOption === 'Cancel') {
+                this.close();
+            } else {
+                // Close the options modal first, then call the callback
+                this.close();
+                // Small delay to allow the first modal to close before opening the confirm modal
+                setTimeout(() => {
+                    onSelect(selectedOption);
+                }, 50);
+            }
         };
     },
 

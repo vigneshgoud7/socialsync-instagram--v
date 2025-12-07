@@ -15,68 +15,67 @@ dotenv.config();
 // Import database connection
 const connectDB = require('./config/database');
 
-// Import routes
+// Route files
 const authRoutes = require('./routes/auth');
 const userRoutes = require('./routes/users');
 const postRoutes = require('./routes/posts');
+const analyticsRoutes = require('./routes/analytics');
 
-// Initialize Express app
+// Initialize app
 const app = express();
 
-// Connect to MongoDB
+// Connect to database
 connectDB();
 
-// Create uploads directory if it doesn't exist
-const uploadsDir = path.join(__dirname, 'uploads');
-if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-}
+// Body parser
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-// Security Middleware
-app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
-}));
-
-// Rate limiting
-const limiter = rateLimit({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // Limit each IP to 100 requests per windowMs
-    message: 'Too many requests from this IP, please try again later.'
-});
-app.use('/api/', limiter);
-
-// CORS Configuration
-app.use(cors({
-    origin: true, // Allow any origin in development
-    credentials: true
-}));
-
-// Body Parser Middleware
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Cookie Parser
+// Cookie parser
 app.use(cookieParser());
 
 // Sanitize data
 app.use(mongoSanitize());
 
-// Compression
+// Set security headers
+app.use(helmet({
+    crossOriginResourcePolicy: false,
+}));
+
+// Compress requests
 app.use(compression());
 
-// API Routes
+// Enable CORS
+app.use(cors({
+    origin: (origin, callback) => {
+        const allowedOrigins = [
+            'http://127.0.0.1:5500',
+            'http://localhost:5500',
+            'http://localhost:3000'
+        ];
+        // Allow requests with no origin (like mobile apps or curl requests)
+        if (!origin) return callback(null, true);
+        if (allowedOrigins.indexOf(origin) === -1) {
+            const msg = 'The CORS policy for this site does not allow access from the specified Origin.';
+            return callback(new Error(msg), false);
+        }
+        return callback(null, true);
+    },
+    credentials: true
+}));
+
+// Rate limiting
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 100
+});
+app.use('/api', limiter);
+
+// Mount routers
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/posts', postRoutes);
-
-// Health check endpoint
-app.get('/health', (req, res) => {
-    res.json({
-        success: true,
-        message: 'Server is running',
-        timestamp: new Date().toISOString()
-    });
-});
+app.use('/api/analytics', analyticsRoutes);
 
 // Root endpoint
 app.get('/', (req, res) => {

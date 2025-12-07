@@ -81,6 +81,62 @@ const SignupPage = {
         `;
 
         this.setupFormHandlers();
+        this.setupRealtimeValidation();
+    },
+
+    setupRealtimeValidation() {
+        const emailInput = document.getElementById('email');
+        const usernameInput = document.getElementById('username');
+
+        // Email validation
+        const validateEmail = debounce(async (email) => {
+            if (!email || !isValidEmail(email)) {
+                return;
+            }
+
+            try {
+                const response = await api.checkAvailability('email', email);
+                if (!response.available) {
+                    this.showError('email', response.message);
+                } else {
+                    this.clearError('email');
+                }
+            } catch (error) {
+                console.error('Email validation error:', error);
+            }
+        }, 500);
+
+        // Username validation
+        const validateUsername = debounce(async (username) => {
+            if (!username || !isValidUsername(username)) {
+                return;
+            }
+
+            try {
+                const response = await api.checkAvailability('username', username);
+                if (!response.available) {
+                    this.showError('username', response.message);
+                } else {
+                    this.clearError('username');
+                }
+            } catch (error) {
+                console.error('Username validation error:', error);
+            }
+        }, 500);
+
+        emailInput.addEventListener('input', (e) => {
+            const email = e.target.value.trim();
+            if (email && isValidEmail(email)) {
+                validateEmail(email);
+            }
+        });
+
+        usernameInput.addEventListener('input', (e) => {
+            const username = e.target.value.trim();
+            if (username && isValidUsername(username)) {
+                validateUsername(username);
+            }
+        });
     },
 
     setupFormHandlers() {
@@ -123,6 +179,36 @@ const SignupPage = {
             }
 
             if (hasError) return;
+
+            // Check if email or username is already taken
+            try {
+                signupBtn.disabled = true;
+                signupBtn.textContent = 'Checking availability...';
+
+                // Check email
+                const emailCheck = await api.checkAvailability('email', email);
+                if (!emailCheck.available) {
+                    this.showError('email', 'Email already registered');
+                    Toast.error('Email already registered');
+                    signupBtn.disabled = false;
+                    signupBtn.textContent = 'Sign Up';
+                    return;
+                }
+
+                // Check username
+                const usernameCheck = await api.checkAvailability('username', username);
+                if (!usernameCheck.available) {
+                    this.showError('username', 'Username already taken');
+                    Toast.error('Username already taken');
+                    signupBtn.disabled = false;
+                    signupBtn.textContent = 'Sign Up';
+                    return;
+                }
+            } catch (error) {
+                console.error('Availability check error:', error);
+                // Continue with registration attempt even if check fails
+            }
+
 
             // Submit
             try {
@@ -168,6 +254,18 @@ const SignupPage = {
         }
         if (inputEl) {
             inputEl.classList.add('error');
+        }
+    },
+
+    clearError(fieldId) {
+        const errorEl = document.getElementById(`${fieldId}-error`);
+        const inputEl = document.getElementById(fieldId);
+
+        if (errorEl) {
+            errorEl.textContent = '';
+        }
+        if (inputEl) {
+            inputEl.classList.remove('error');
         }
     }
 };
